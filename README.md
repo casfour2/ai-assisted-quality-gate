@@ -28,3 +28,8 @@ This project is in an early, exploratory stage. It is currently focused on estab
 
 ## Disclaimer
 This repository contains illustrative and fictional examples intended for learning and exploration purposes only. Any systems, workflows, configurations, or AI behaviors described here are not production-ready and should not be used as-is in real-world environments. The content is provided without guarantees and is subject to change.
+
+## Tooling (Initial Selection)
+- **Python** – Chosen as the primary implementation language for its readability, ecosystem, and strong support for testing and AI-related workflows.
+- **Pytest** – Selected as the testing framework due to its expressiveness, extensibility, and widespread use in Python-based test automation.
+- **GitHub Actions** – Used for CI/CD automation to keep workflows close to the repository and enable reproducible, version-controlled quality gates.
