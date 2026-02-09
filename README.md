@@ -25,3 +25,6 @@ This repository is an exploratory implementation of automated testing, AI-assist
 
 ## Status
 This project is in an early, exploratory stage. It is currently focused on establishing structure and intent. Functionality is incomplete and expected to evolve over time.
+
+## Disclaimer
+This repository contains illustrative and fictional examples intended for learning and exploration purposes only. Any systems, workflows, configurations, or AI behaviors described here are not production-ready and should not be used as-is in real-world environments. The content is provided without guarantees and is subject to change.
