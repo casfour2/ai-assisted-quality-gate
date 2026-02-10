@@ -36,5 +36,5 @@ jobs:
         with:
           name: test-and coverage-reports
           path: |
-            tests-results/junit.xml
+            tests/junit.xml
             coverage.xml
