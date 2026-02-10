@@ -25,4 +25,16 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest --cov=. --cov-fail-under=80
+          pytest\
+            --junitxml=tests/junit.xml \
+            --cov=. \
+            --cov-report=xml \
+            --cov=. --cov-fail-under=80
+      
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-and coverage-reports
+          path: |
+            tests-results/junit.xml
+            coverage.xml
