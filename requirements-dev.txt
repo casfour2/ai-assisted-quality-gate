@@ -1,0 +1,6 @@
+-r requirements.txt
+openai==2.20.0
+httpx==0.28.1
+tqdm==4.67.3
+pytest==9.0.2
+pytest-cov==4.0.0
