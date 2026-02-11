@@ -1,8 +1,10 @@
 import json
+from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import Literal, List
 from openai import OpenAI
 from ai.utils import extract_json
+from ai.report_parser import build_input_from_reports
 from ai.models import (
     AnalysisInput,
     AnalysisOutput,
@@ -151,46 +153,56 @@ CI RESULT:
 # Local Execution Example
 # -------------------------
 
-from pathlib import Path
-
 if __name__ == "__main__":
-
-    example_input = AnalysisInput(
-        tests=TestMetrics(total=4, passed=3, failed=1),
-        coverage=CoverageMetrics(percent=96.3, threshold=80.0),
-    )
-
-    analyzer = QualityAnalyzer()
-    result = analyzer.analyze(example_input)
-
-    print("\nAI INSIGHT:\n")
-
-    insight = None
-    try:
-        insight = analyzer.generate_ai_insight(result)
-    except Exception as e:
-        print("AI validation failed:", e)
-
-    if insight:
-        print(insight.model_dump_json(indent=2))
-
-    print("\nJSON OUTPUT:")
-    json_output = result.model_dump_json(indent=2)
-    print(json_output)
-
-    print("\nMARKDOWN REPORT:\n")
-    markdown_report = analyzer.generate_markdown_report(result)
-    print(markdown_report)
 
     artifacts_dir = Path("artifacts")
     artifacts_dir.mkdir(exist_ok=True)
 
-    json_path = artifacts_dir / "ai_report.json"
-    md_path = artifacts_dir / "ai_report.md"
+    junit_path = artifacts_dir / "junit.xml"
+    coverage_path = artifacts_dir / "coverage.xml"
 
-    json_path.write_text(json_output)
+    # --- Build structured input safely ---
+    try:
+        analysis_input = build_input_from_reports(
+            junit_path=str(junit_path),
+            coverage_path=str(coverage_path),
+        )
+    except Exception as e:
+        print("Failed to parse artifacts:", e)
+        # Fallback to empty metrics to avoid analyzer crash
+        from ai.models import AnalysisInput, TestMetrics, CoverageMetrics
+        analysis_input = AnalysisInput(
+            tests=TestMetrics(total=0, passed=0, failed=0),
+            coverage=CoverageMetrics(percent=0.0, threshold=80.0),
+        )
+
+    # --- Analyze ---
+    analyzer = QualityAnalyzer()
+    result = analyzer.analyze(analysis_input)
+
+    # --- Generate Markdown report ---
+    markdown_report = analyzer.generate_markdown_report(result)
+    md_path = artifacts_dir / "ai_report.md"
     md_path.write_text(markdown_report)
 
-    print(f"\nAI reports saved:")
-    print(f"- {json_path.resolve()}")
-    print(f"- {md_path.resolve()}")
+    # --- Generate JSON output ---
+    json_output = result.model_dump_json(indent=2)
+    json_path = artifacts_dir / "ai_report.json"
+    json_path.write_text(json_output)
+
+    # --- Generate AI Insight ---
+    try:
+        insight = analyzer.generate_ai_insight(result)
+        print("\nAI INSIGHT:\n")
+        print(insight.model_dump_json(indent=2))
+    except Exception as e:
+        print("AI insight generation failed:", e)
+
+    # --- Print outputs ---
+    print("\nJSON OUTPUT:\n")
+    print(json_output)
+
+    print("\nMARKDOWN REPORT:\n")
+    print(markdown_report)
+
+    print(f"\nReports saved to {artifacts_dir.resolve()}")

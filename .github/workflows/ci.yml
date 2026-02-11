@@ -26,25 +26,18 @@ jobs:
       - name: Run tests
         run: |
           pytest\
-            --junitxml=tests/junit.xml \
+            --junitxml=artifacts/junit.xml \
             --cov=. \
-            --cov-report=xml \
+            --cov-report=xml:artifacts/coverage.xml
             --cov=. --cov-fail-under=80
 
       - name: Run AI-assisted quality gate
         run: |
-          python -m ai.analyzer      
+          python -m ai.analyzer     
       
       - name: Upload test artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: test-and coverage-reports
+          name: Upload quality-reports
           path: |
-            tests/junit.xml
-            coverage.xml
-
-      - name: Upload AI Quality Reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: ai-quality-reports
-          path: artifacts/ 
+            artifacts/

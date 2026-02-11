@@ -1,16 +1,16 @@
 # Quality Gate Report
 
 ## Summary
-- Test Status: **FAIL**
-- Coverage Status: **PASS**
+- Test Status: **PASS**
+- Coverage Status: **FAIL**
 - Overall Status: **FAIL**
 - Risk Level: **HIGH**
 
 ## Metrics
-- Total Tests: 4
-- Passed: 3
-- Failed: 1
-- Coverage: 96.3% (Threshold: 80.0%)
+- Total Tests: 0
+- Passed: 0
+- Failed: 0
+- Coverage: 0.0% (Threshold: 80.0%)
 
 ## Recommendations
 - [HIGH] Resolve failing tests before deployment.
