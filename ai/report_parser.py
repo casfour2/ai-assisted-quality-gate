@@ -9,7 +9,14 @@ def build_input_from_reports(junit_path: str, coverage_path: str) -> AnalysisInp
     junit_tree = ET.parse(junit_path)
     junit_root = junit_tree.getroot()
 
-    # JUnit root is typically <testsuite>
+    # JUnit root could be <testsuites> (wrapper) or <testsuite> (direct)
+    # If root is <testsuites>, get the first <testsuite> child
+    if junit_root.tag == "testsuites":
+        junit_root = junit_root.find("testsuite")
+        if junit_root is None:
+            # No testsuite found, use empty metrics
+            junit_root = ET.Element("testsuite", tests="0", failures="0", errors="0")
+
     total_tests = int(junit_root.attrib.get("tests", 0))
     failures = int(junit_root.attrib.get("failures", 0))
     errors = int(junit_root.attrib.get("errors", 0))
