@@ -33,7 +33,7 @@ jobs:
           mkdir -p artifacts
           pytest \
             --junitxml=artifacts/junit.xml \
-            --cov=. \
+            --cov=app \
             --cov-report=xml:artifacts/coverage.xml \
             --cov-fail-under=80
 
