@@ -30,7 +30,7 @@ jobs:
             --cov=. \
             --cov-report=xml \
             --cov=. --cov-fail-under=80
-            
+
       - name: Run AI-assisted quality gate
         run: |
           python -m ai.analyzer      
@@ -42,3 +42,9 @@ jobs:
           path: |
             tests/junit.xml
             coverage.xml
+
+      - name: Upload AI Quality Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-quality-reports
+          path: artifacts/ 
