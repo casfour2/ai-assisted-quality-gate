@@ -151,6 +151,8 @@ CI RESULT:
 # Local Execution Example
 # -------------------------
 
+from pathlib import Path
+
 if __name__ == "__main__":
 
     example_input = AnalysisInput(
@@ -163,14 +165,32 @@ if __name__ == "__main__":
 
     print("\nAI INSIGHT:\n")
 
+    insight = None
     try:
         insight = analyzer.generate_ai_insight(result)
-        print(insight.model_dump_json(indent=2))
     except Exception as e:
         print("AI validation failed:", e)
 
-    print("JSON OUTPUT:")
-    print(result.model_dump_json(indent=2))
+    if insight:
+        print(insight.model_dump_json(indent=2))
+
+    print("\nJSON OUTPUT:")
+    json_output = result.model_dump_json(indent=2)
+    print(json_output)
 
     print("\nMARKDOWN REPORT:\n")
-    print(analyzer.generate_markdown_report(result))
+    markdown_report = analyzer.generate_markdown_report(result)
+    print(markdown_report)
+
+    artifacts_dir = Path("artifacts")
+    artifacts_dir.mkdir(exist_ok=True)
+
+    json_path = artifacts_dir / "ai_report.json"
+    md_path = artifacts_dir / "ai_report.md"
+
+    json_path.write_text(json_output)
+    md_path.write_text(markdown_report)
+
+    print(f"\nAI reports saved:")
+    print(f"- {json_path.resolve()}")
+    print(f"- {md_path.resolve()}")

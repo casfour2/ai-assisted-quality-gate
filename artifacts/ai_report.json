@@ -1,0 +1,21 @@
+{
+  "summary": {
+    "test_status": "FAIL",
+    "coverage_status": "PASS",
+    "overall_status": "FAIL"
+  },
+  "metrics": {
+    "total_tests": 4,
+    "passed": 3,
+    "failed": 1,
+    "coverage_percent": 96.3,
+    "coverage_threshold": 80.0
+  },
+  "risk_level": "HIGH",
+  "recommendations": [
+    {
+      "message": "Resolve failing tests before deployment.",
+      "severity": "HIGH"
+    }
+  ]
+}
