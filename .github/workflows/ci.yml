@@ -25,11 +25,12 @@ jobs:
 
       - name: Run tests
         run: |
+          mkdir -p artifacts
           pytest\
             --junitxml=artifacts/junit.xml \
             --cov=. \
             --cov-report=xml:artifacts/coverage.xml
-            --cov=. --cov-fail-under=80
+            --cov-fail-under=80
 
       - name: Run AI-assisted quality gate
         run: |
