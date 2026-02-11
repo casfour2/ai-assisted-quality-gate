@@ -110,14 +110,24 @@ class QualityAnalyzer:
     
     def generate_ai_insight(self, result: AnalysisOutput) -> AIInsight:
 
-        api_key = os.getenv("GITHUB_TOKEN")
-        if not api_key:
-            raise RuntimeError("GITHUB_TOKEN environment variable not set. Required for AI insights.")
-
-        client = OpenAI(
-            base_url="https://models.inference.ai.azure.com",
-            api_key=api_key
-        )
+        # Check for explicit GitHub Models token
+        github_token = os.getenv("GITHUB_TOKEN")
+        use_github_models = os.getenv("USE_GITHUB_MODELS", "false").lower() == "true"
+        
+        if github_token and use_github_models:
+            # Use GitHub Models (CI environment)
+            client = OpenAI(
+                base_url="https://models.inference.ai.azure.com",
+                api_key=github_token
+            )
+            model = os.getenv("AI_MODEL", "gpt-4o-mini")
+        else:
+            # Fall back to local Ollama (development environment)
+            client = OpenAI(
+                base_url="http://localhost:11434/v1",
+                api_key="ollama"
+            )
+            model = "gpt-oss:20b"
 
         prompt = f"""
 You are a strict software quality analyst.
@@ -140,7 +150,7 @@ CI RESULT:
 """
 
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=model,
             temperature=0,
             messages=[
                 {
@@ -198,7 +208,9 @@ if __name__ == "__main__":
     try:
         insight = analyzer.generate_ai_insight(result)
     except Exception as e:
-        print("AI insight generation failed:", e)
+        print(f"AI insight generation failed: {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
 
     markdown_report = analyzer.generate_markdown_report(result, insight)
     md_path = artifacts_dir / "ai_report.md"
