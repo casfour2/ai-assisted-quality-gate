@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import Literal, List, Optional
@@ -109,7 +110,14 @@ class QualityAnalyzer:
     
     def generate_ai_insight(self, result: AnalysisOutput) -> AIInsight:
 
-        client = OpenAI(base_url="http://localhost:11434/v1",api_key="ollama")
+        api_key = os.getenv("GITHUB_TOKEN")
+        if not api_key:
+            raise RuntimeError("GITHUB_TOKEN environment variable not set. Required for AI insights.")
+
+        client = OpenAI(
+            base_url="https://models.inference.ai.azure.com",
+            api_key=api_key
+        )
 
         prompt = f"""
 You are a strict software quality analyst.
@@ -132,7 +140,7 @@ CI RESULT:
 """
 
         response = client.chat.completions.create(
-            model="gpt-oss:20b",
+            model="gpt-4o-mini",
             temperature=0,
             messages=[
                 {
