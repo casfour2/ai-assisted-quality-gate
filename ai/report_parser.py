@@ -5,16 +5,12 @@ from ai.models import AnalysisInput, AIInsight, TestMetrics, CoverageMetrics
 
 
 def build_input_from_reports(junit_path: str, coverage_path: str) -> AnalysisInput:
-    # --- Parse JUnit XML ---
     junit_tree = ET.parse(junit_path)
     junit_root = junit_tree.getroot()
 
-    # JUnit root could be <testsuites> (wrapper) or <testsuite> (direct)
-    # If root is <testsuites>, get the first <testsuite> child
     if junit_root.tag == "testsuites":
         junit_root = junit_root.find("testsuite")
         if junit_root is None:
-            # No testsuite found, use empty metrics
             junit_root = ET.Element("testsuite", tests="0", failures="0", errors="0")
 
     total_tests = int(junit_root.attrib.get("tests", 0))
@@ -30,17 +26,15 @@ def build_input_from_reports(junit_path: str, coverage_path: str) -> AnalysisInp
         failed=failed,
     )
 
-    # --- Parse Coverage XML ---
     coverage_tree = ET.parse(coverage_path)
     coverage_root = coverage_tree.getroot()
 
-    # coverage.py stores line-rate as a decimal like 0.963
     line_rate = float(coverage_root.attrib.get("line-rate", 0))
     coverage_percent = round(line_rate * 100, 2)
 
     coverage_metrics = CoverageMetrics(
         percent=coverage_percent,
-        threshold=80.0,  # keep consistent with your CI gate
+        threshold=80.0,
     )
 
     return AnalysisInput(

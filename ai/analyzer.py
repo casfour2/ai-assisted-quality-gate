@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from pydantic import BaseModel, Field
-from typing import Literal, List
+from typing import Literal, List, Optional
 from openai import OpenAI
 from ai.utils import extract_json
 from ai.report_parser import build_input_from_reports
@@ -34,7 +34,6 @@ class QualityAnalyzer:
             else "FAIL"
         )
 
-        # Deterministic risk logic
         if overall_status == "PASS":
             risk_level = "LOW"
             recommendations = []
@@ -64,7 +63,7 @@ class QualityAnalyzer:
             recommendations=recommendations,
         )
 
-    def generate_markdown_report(self, result: AnalysisOutput) -> str:
+    def generate_markdown_report(self, result: AnalysisOutput, insight: Optional[AIInsight] = None) -> str:
 
         lines = []
 
@@ -91,6 +90,20 @@ class QualityAnalyzer:
             for rec in result.recommendations:
                 lines.append(f"- [{rec.severity}] {rec.message}")
             lines.append("")
+
+        if insight:
+            lines.append("## AI Insights")
+            lines.append(f"### Executive Summary")
+            lines.append(insight.executive_summary)
+            lines.append("")
+            lines.append(f"### Risk Explanation")
+            lines.append(insight.risk_explanation)
+            lines.append("")
+            if insight.improvement_suggestions:
+                lines.append(f"### Improvement Suggestions")
+                for suggestion in insight.improvement_suggestions:
+                    lines.append(f"- {suggestion}")
+                lines.append("")
 
         return "\n".join(lines)
     
@@ -149,10 +162,6 @@ CI RESULT:
                 f"Error: {e}"
     )
 
-# -------------------------
-# Local Execution Example
-# -------------------------
-
 if __name__ == "__main__":
 
     artifacts_dir = Path("artifacts")
@@ -161,7 +170,6 @@ if __name__ == "__main__":
     junit_path = artifacts_dir / "junit.xml"
     coverage_path = artifacts_dir / "coverage.xml"
 
-    # --- Build structured input safely ---
     try:
         analysis_input = build_input_from_reports(
             junit_path=str(junit_path),
@@ -169,40 +177,40 @@ if __name__ == "__main__":
         )
     except Exception as e:
         print("Failed to parse artifacts:", e)
-        # Fallback to empty metrics to avoid analyzer crash
         from ai.models import AnalysisInput, TestMetrics, CoverageMetrics
         analysis_input = AnalysisInput(
             tests=TestMetrics(total=0, passed=0, failed=0),
             coverage=CoverageMetrics(percent=0.0, threshold=80.0),
         )
 
-    # --- Analyze ---
     analyzer = QualityAnalyzer()
     result = analyzer.analyze(analysis_input)
 
-    # --- Generate Markdown report ---
-    markdown_report = analyzer.generate_markdown_report(result)
-    md_path = artifacts_dir / "ai_report.md"
-    md_path.write_text(markdown_report)
-
-    # --- Generate JSON output ---
-    json_output = result.model_dump_json(indent=2)
-    json_path = artifacts_dir / "ai_report.json"
-    json_path.write_text(json_output)
-
-    # --- Generate AI Insight ---
+    insight = None
     try:
         insight = analyzer.generate_ai_insight(result)
-        print("\nAI INSIGHT:\n")
-        print(insight.model_dump_json(indent=2))
     except Exception as e:
         print("AI insight generation failed:", e)
 
-    # --- Print outputs ---
+    markdown_report = analyzer.generate_markdown_report(result, insight)
+    md_path = artifacts_dir / "ai_report.md"
+    md_path.write_text(markdown_report, encoding="utf-8")
+
+    output_dict = result.model_dump()
+    if insight:
+        output_dict["ai_insights"] = insight.model_dump()
+    json_output = json.dumps(output_dict, indent=2)
+    json_path = artifacts_dir / "ai_report.json"
+    json_path.write_text(json_output, encoding="utf-8")
+
     print("\nJSON OUTPUT:\n")
     print(json_output)
 
     print("\nMARKDOWN REPORT:\n")
     print(markdown_report)
+
+    if insight:
+        print("\nAI INSIGHT:\n")
+        print(insight.model_dump_json(indent=2))
 
     print(f"\nReports saved to {artifacts_dir.resolve()}")
