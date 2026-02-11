@@ -13,6 +13,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      models: read
 
     steps:
       - name: Checkout repository
