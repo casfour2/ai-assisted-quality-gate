@@ -1,127 +1,170 @@
 # AI-Assisted Quality Gate
 
 ## Purpose
-This repository is an exploratory implementation of automated testing, AI-assisted analysis, and CI/CD pipelines working together to produce actionable quality signals. It exists as a learning space to broaden understanding of how these techniques interact in practice.
+
+This repository is an exploratory implementation of automated testing,
+deterministic quality enforcement, AI-assisted analysis, and CI/CD
+pipelines working together to produce actionable quality signals.
+
+It exists as a learning space to examine how deterministic guardrails
+and probabilistic AI can coexist without compromising reliability.
+
+------------------------------------------------------------------------
+
+## Core Thesis
+
+This project explores the boundary between **deterministic software
+quality enforcement** and **probabilistic AI interpretation**.
+
+-   Deterministic logic decides.
+-   AI explains and contextualizes.
+-   The two are intentionally separated.
+
+------------------------------------------------------------------------
 
 ## What This Is
-- An exploratory, reference-style project
-- A learning-focused repository for examining how automated testing, AI-assisted analysis, and CI/CD workflows can interact
-- A structure-first implementation that emphasizes guardrails, intent, and quality signals over features
-- A space for experimentation and iteration rather than a production-ready system
+
+-   An exploratory, reference-style project\
+-   A learning-focused repository for examining how automated testing,
+    structured analysis, and AI augmentation can interact\
+-   A structure-first implementation that emphasizes guardrails, intent,
+    and quality signals over features\
+-   A controlled environment for experimenting with AI inside CI/CD
+    without surrendering determinism
+
+------------------------------------------------------------------------
 
 ## What This Is Not
-- A production-ready system or reference architecture
-- A complete or finalized implementation
-- A drop-in solution for real-world environments
-- A benchmark, compliance framework, or best-practice guide
-- An endorsement of specific tools, models, or vendors
+
+-   A production-ready system or reference architecture\
+-   A complete or finalized implementation\
+-   A drop-in solution for real-world environments\
+-   A benchmark, compliance framework, or best-practice guide\
+-   An endorsement of specific tools, models, or vendors
+
+------------------------------------------------------------------------
+
+## Decision Authority Model
+
+The quality gate status (PASS / FAIL and risk level) is determined
+**exclusively** by deterministic rules based on:
+
+-   Test results
+-   Coverage thresholds
+
+AI-generated insights are advisory.\
+AI **cannot override** or modify the quality gate decision.
+
+This separation ensures reproducibility, auditability, and predictable
+CI behavior.
+
+------------------------------------------------------------------------
 
 ## Design Principles
 
-This project follows several key design principles:
+1.  **Structure Over Features**\
+    Prioritizes clear architecture and explicit guardrails over feature
+    completeness.
 
-1. **Structure Over Features** – Prioritizes clear, understandable architecture and guardrails over feature completeness. The goal is to establish a solid foundation for exploration and iteration.
+2.  **Layered Separation of Concerns**
 
-2. **Layered Separation of Concerns** – Distinct layers handle different responsibilities:
-   - **CI/CD Layer** – Test execution and metric collection
-   - **Analysis Layer** – Deterministic quality assessment
-   - **AI Enhancement** – Optional contextual insights
-   - **Application Layer** – External interfaces and endpoints
+    -   **CI/CD Layer** -- Test execution and metric collection\
+    -   **Analysis Layer** -- Deterministic quality evaluation\
+    -   **AI Enhancement Layer** -- Optional contextual insights\
+    -   **Application Layer** -- API exposure and report delivery
 
-3. **Type Safety and Validation** – Uses Pydantic for strict data validation across all data transformations. Input and output models are explicitly defined, making the contract between layers clear.
+3.  **Type Safety and Explicit Contracts**\
+    All inter-layer communication uses strict Pydantic models.\
+    Quality is represented as structured data, not loosely formatted
+    text.
 
-4. **Determinism with Optional AI** – The core quality assessment is deterministic and reproducible (based on test metrics and coverage). AI enhancement is optional and treated as an augmentation, not a replacement.
+4.  **Determinism First**\
+    The core gate is reproducible and rule-driven. AI augments, but does
+    not decide.
 
-5. **Extensibility by Design** – Each component (report parser, analyzer, API) is designed to be replaceable or extended without modification to other layers. This enables experimentation with different analysis strategies or AI models.
+5.  **Extensibility by Design**\
+    Report parsing, analysis logic, and AI providers are modular and
+    replaceable.
 
-6. **Learning-Focused** – All design decisions prioritize clarity and demonstrating interaction patterns over optimization or production concerns. The codebase is intentionally simple to make concepts accessible.
+6.  **Learning-Focused Clarity**\
+    The codebase emphasizes readability and conceptual transparency over
+    optimization.
+
+------------------------------------------------------------------------
+
+## Quality Data Contracts
+
+All quality data flows through explicitly defined Pydantic models,
+including:
+
+-   `AnalysisInput`
+-   `TestMetrics`
+-   `CoverageMetrics`
+-   `QualityMetrics`
+-   `AnalysisOutput`
+-   `AIInsight`
+
+This approach ensures:
+
+-   Deterministic validation of CI inputs\
+-   Stable AI prompt construction\
+-   Reproducible analysis results\
+-   Clear boundaries between metrics and narrative insight
+
+The system treats quality as structured data first, narrative second.
+
+------------------------------------------------------------------------
 
 ## Repository Structure
-- `app/` – Application code and execution surface
-- `tests/` – Automated tests and validation logic
-- `ai/` – AI-related logic, prompts, and model boundaries
-- `.github/workflows/` – CI/CD workflows and automation policies
-- `docker/` – Container definitions and runtime isolation
 
-## Architecture
+-   `app/` -- FastAPI application and execution surface\
+-   `tests/` -- Automated test suite\
+-   `ai/` -- Report parsing, deterministic analyzer, AI integration\
+-   `.github/workflows/` -- CI/CD workflows and automation policies\
+-   `docker/` -- Container definitions and runtime isolation
 
-The system follows a pipeline approach that integrates testing, coverage analysis, AI-driven insights, and quality decisions:
+------------------------------------------------------------------------
 
-1. **CI/CD Pipeline** – GitHub Actions runs tests and measures code coverage
-2. **Report Collection** – Test results (JUnit XML) and coverage metrics (Coverage XML) are generated
-3. **Analysis Layer** – Reports are parsed into structured data, analyzed for quality metrics, and risk levels are determined
-4. **AI Enhancement** – Optional AI analysis provides contextual insights and recommendations beyond deterministic rules
-5. **Output** – FastAPI application exposes endpoints and serves analysis results
+## CI Execution Flow
 
-graph TB
-    %% CI/CD Layer
-    subgraph CI["CI/CD Pipeline"]
-        GH["GitHub Actions"]
-        Tests["Run Tests<br/>(Pytest)"]
-        Coverage["Measure Coverage"]
-    end
+During CI execution:
 
-    %% Test Reports
-    subgraph Reports["Test Reports"]
-        JUnit["JUnit XML<br/>(Test Results)"]
-        Cov["Coverage XML<br/>(Coverage Data)"]
-    end
+1.  Tests run via `pytest`
+2.  Coverage is collected
+3.  JUnit XML and Coverage XML reports are generated
+4.  `ai/run_analyzer.py` parses reports into structured models
+5.  Deterministic analysis evaluates:
+    -   Test pass/fail state
+    -   Coverage thresholds
+    -   Risk level
+6.  Optional AI enhancement generates contextual insights
+7.  JSON and Markdown outputs are produced as artifacts
 
-    %% Analysis Layer
-    subgraph Analysis["Analysis Layer"]
-        Parser["Report Parser<br/>(ai/report_parser.py)"]
-        Input["AnalysisInput<br/>(Models)"]
-        Analyzer["Quality Analyzer<br/>(ai/analyzer.py)"]
-        Output["AnalysisOutput<br/>(Risk Level,<br/>Recommendations)"]
-    end
+The quality decision occurs before any AI augmentation.
 
-    %% AI Enhancement
-    subgraph AI["AI Enhancement"]
-        AIModel["AI Model<br/>(OpenAI/Ollama)"]
-        Insight["AI Insight<br/>(Contextual Feedback)"]
-    end
+------------------------------------------------------------------------
 
-    %% Application & Docker
-    subgraph Docker["Docker Runtime"]
-        App["app container<br>FastAPI (Python 3.12)"]
-        AIContainer["ai container<br>Python 3.12-slim"]
-        App -->|Depends On| AIContainer
-        App -->|Exposes API| Browser["Browser / API Client"]
-        AIContainer -->|Optional Scripts / Models| App
-    end
+## Architecture Overview
 
-    %% Connections
-    GH --> Tests
-    GH --> Coverage
-    Tests --> JUnit
-    Coverage --> Cov
+The system follows a pipeline approach:
 
-    JUnit --> Parser
-    Cov --> Parser
-    Parser --> Input
-    Input --> Analyzer
-    Analyzer --> Output
-    Output --> AIModel
-    AIModel --> Insight
+1.  **CI/CD Pipeline** -- GitHub Actions runs tests and measures
+    coverage\
+2.  **Report Collection** -- JUnit and Coverage XML are generated\
+3.  **Analysis Layer** -- Structured parsing and deterministic quality
+    evaluation\
+4.  **AI Enhancement** -- Optional contextual recommendations\
+5.  **Output Layer** -- FastAPI exposes analysis results
 
-    Output --> App
-    Insight --> App
-
-    %% Styling
-    style CI fill:#e1f5ff
-    style Reports fill:#f3e5f5
-    style Analysis fill:#e8f5e9
-    style AI fill:#fff3e0
-    style Docker fill:#fce4ec
+------------------------------------------------------------------------
 
 ## Example Outputs
 
-The system produces structured analysis outputs in both JSON and Markdown formats.
+### Example 1: Quality Gate Pass
 
-### Example 1: Quality Gate Pass (All Checks Pass)
+**JSON Output**
 
-**JSON Output:**
-```json
+``` json
 {
   "summary": {
     "test_status": "PASS",
@@ -140,27 +183,13 @@ The system produces structured analysis outputs in both JSON and Markdown format
 }
 ```
 
-**Markdown Report:**
-```
-# Quality Gate Report
-
-## Summary
-- Test Status: **PASS**
-- Coverage Status: **PASS**
-- Overall Status: **PASS**
-- Risk Level: **LOW**
-
-## Metrics
-- Total Tests: 45
-- Passed: 45
-- Failed: 0
-- Coverage: 85.3% (Threshold: 80.0%)
-```
+------------------------------------------------------------------------
 
 ### Example 2: Quality Gate Fail (Coverage Below Threshold)
 
-**JSON Output:**
-```json
+**JSON Output**
+
+``` json
 {
   "summary": {
     "test_status": "PASS",
@@ -177,40 +206,75 @@ The system produces structured analysis outputs in both JSON and Markdown format
   "risk_level": "HIGH",
   "recommendations": [
     {
-      "message": "Resolve failing tests before deployment.",
+      "message": "Increase test coverage to meet the configured threshold.",
       "severity": "HIGH"
     }
   ]
 }
 ```
 
-**Markdown Report:**
-```
-# Quality Gate Report
+------------------------------------------------------------------------
 
-## Summary
-- Test Status: **PASS**
-- Coverage Status: **FAIL**
-- Overall Status: **FAIL**
-- Risk Level: **HIGH**
+## How to Run Locally
 
-## Metrics
-- Total Tests: 42
-- Passed: 42
-- Failed: 0
-- Coverage: 72.1% (Threshold: 80.0%)
+1.  Install dependencies
 
-## Recommendations
-- [HIGH] Resolve failing tests before deployment.
-```
+    ``` bash
+    pip install -r requirements.txt
+    ```
+
+2.  Run tests and generate reports
+
+    ``` bash
+    pytest --junitxml=report.xml --cov=app --cov-report=xml
+    ```
+
+3.  Execute analyzer
+
+    ``` bash
+    python ai/run_analyzer.py
+    ```
+
+4.  Run FastAPI app
+
+    ``` bash
+    uvicorn app.main:app --reload
+    ```
+
+------------------------------------------------------------------------
+
+## Current Capabilities
+
+-   Deterministic quality gate based on test and coverage metrics\
+-   Structured validation using Pydantic models\
+-   Optional AI-generated contextual analysis\
+-   JSON and Markdown reporting\
+-   CI integration via GitHub Actions\
+-   Dockerized runtime environment
+
+------------------------------------------------------------------------
+
+## Future Exploration
+
+-   Multiple configurable quality policies\
+-   Historical trend analysis\
+-   Policy-as-code experimentation\
+-   Multi-model AI comparison\
+-   Pluggable scoring strategies
+
+------------------------------------------------------------------------
 
 ## Status
-This project is in an early, exploratory stage. It is currently focused on establishing structure and intent. Functionality is incomplete and expected to evolve over time.
+
+This project is an ongoing learning environment.\
+It is experimental and intended for education, exploration, and
+architectural experimentation rather than production use.
+
+------------------------------------------------------------------------
 
 ## Disclaimer
-This repository contains illustrative and fictional examples intended for learning and exploration purposes only. Any systems, workflows, configurations, or AI behaviors described here are not production-ready and should not be used as-is in real-world environments. The content is provided without guarantees and is subject to change.
 
-## Tooling (Initial Selection)
-- **Python** – Chosen as the primary implementation language for its readability, ecosystem, and strong support for testing and AI-related workflows.
-- **Pytest** – Selected as the testing framework due to its expressiveness, extensibility, and widespread use in Python-based test automation.
-- **GitHub Actions** – Used for CI/CD automation to keep workflows close to the repository and enable reproducible, version-controlled quality gates.
+This repository contains illustrative and fictional examples intended
+for learning purposes only. Systems and workflows described here are not
+production-ready and should not be used as-is in real-world
+environments.
