@@ -89,6 +89,9 @@ def simple_ui():
                 }
             }
         </script>
+        <footer>
+            <p>Secure Login Portal</p>
+        </footer>
     </body>
     </html>
     """
