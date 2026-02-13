@@ -3,9 +3,7 @@ name: Quality Assurance
 on:
   pull_request:
     branches: [ main ]
-  push:
-    branches: [ main ]
-
+    
 jobs:
   qa:
     runs-on: ubuntu-latest
